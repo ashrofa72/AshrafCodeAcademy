@@ -1,7 +1,21 @@
 import { GoogleGenAI } from "@google/genai";
 import { ProgrammingLanguage } from '../types';
 
-const apiKey = process.env.API_KEY;
+// Safely retrieve API key to prevent runtime crash on platforms where process is undefined
+const getApiKey = () => {
+  try {
+    // @ts-ignore
+    if (typeof process !== 'undefined' && process.env) {
+      // @ts-ignore
+      return process.env.API_KEY;
+    }
+  } catch (e) {
+    // Ignore error
+  }
+  return undefined;
+};
+
+const apiKey = getApiKey();
 
 // Initialize the client outside the function to reuse the instance
 const ai = new GoogleGenAI({ apiKey: apiKey || 'dummy-key' });
