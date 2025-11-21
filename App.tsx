@@ -24,15 +24,10 @@ const App: React.FC = () => {
             const userData = snapshot.data() as User;
             const email = userData.email?.toLowerCase().trim() || '';
             
-            // Fix for name display: Fallback to Auth profile if DB name is missing
-            if (!userData.name) {
+            // Fix for name display: Fallback to Auth profile if DB name is missing or empty
+            if (!userData.name || userData.name.trim() === '') {
                 const currentAuthUser = auth.currentUser || firebaseUser;
-                // Check both currentUser and the snapshot user for a display name
-                if (currentAuthUser.displayName) {
-                    userData.name = currentAuthUser.displayName;
-                } else if (firebaseUser.displayName) {
-                    userData.name = firebaseUser.displayName;
-                }
+                userData.name = currentAuthUser.displayName || firebaseUser.displayName || email.split('@')[0] || 'Student';
             }
             
             // Force Admin role for specific email if not already set in DB
@@ -58,7 +53,7 @@ const App: React.FC = () => {
             
             // Try to get the most up-to-date name from auth
             const currentAuthUser = auth.currentUser || firebaseUser;
-            const displayName = currentAuthUser.displayName || firebaseUser.displayName || email.split('@')[0];
+            const displayName = currentAuthUser.displayName || firebaseUser.displayName || email.split('@')[0] || 'Student';
 
             const isAdmin = email === 'as.ka1@hotmail.com' || email === 'admin@ashrafcodeacademy.com';
             
@@ -78,7 +73,7 @@ const App: React.FC = () => {
             // Fallback: Create a temporary user session from Auth data if DB is blocked
             const email = firebaseUser.email?.toLowerCase().trim() || '';
             const currentAuthUser = auth.currentUser || firebaseUser;
-            const displayName = currentAuthUser.displayName || firebaseUser.displayName || email.split('@')[0];
+            const displayName = currentAuthUser.displayName || firebaseUser.displayName || email.split('@')[0] || 'Student';
             const isAdmin = email === 'as.ka1@hotmail.com' || email === 'admin@ashrafcodeacademy.com';
             
             setUser({

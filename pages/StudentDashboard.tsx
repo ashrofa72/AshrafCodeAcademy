@@ -84,14 +84,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
       
       // Helper to safely stringify objects preventing circular references
       const safeStringify = (obj: any) => {
-        const seen = new WeakSet();
+        // Handle DOM elements specifically to avoid massive recursive structures
+        if (obj instanceof Element) {
+            return obj.outerHTML.split('>')[0] + '...>';
+        }
+
+        const cache = new Set();
         try {
             return JSON.stringify(obj, (key, value) => {
             if (typeof value === "object" && value !== null) {
-                if (seen.has(value)) {
-                return "[Circular]";
+                if (cache.has(value)) {
+                    return "[Circular]";
                 }
-                seen.add(value);
+                cache.add(value);
             }
             return value;
             }, 2);
