@@ -1,0 +1,5 @@
+{
+  "name": "AshrafCodeAcademy AI",
+  "description": "A SaaS platform for students to solve programming questions in JS, HTML/CSS, and Python using Gemini AI.",
+  "requestFramePermissions": []
+}
