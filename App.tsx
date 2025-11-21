@@ -25,9 +25,11 @@ const App: React.FC = () => {
             const email = userData.email?.toLowerCase().trim() || '';
             
             // Fix for name display: Fallback to Auth profile if DB name is missing or empty
+            // Using a robust check to ensure we always display something
             if (!userData.name || userData.name.trim() === '') {
                 const currentAuthUser = auth.currentUser || firebaseUser;
-                userData.name = currentAuthUser.displayName || firebaseUser.displayName || email.split('@')[0] || 'Student';
+                const displayName = currentAuthUser.displayName || firebaseUser.displayName || email.split('@')[0] || 'Student';
+                userData.name = displayName;
             }
             
             // Force Admin role for specific email if not already set in DB

@@ -85,7 +85,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
       // Helper to safely stringify objects preventing circular references
       const safeStringify = (obj: any) => {
         // Handle DOM elements specifically to avoid massive recursive structures
-        if (obj instanceof Element) {
+        // Check if Element is defined (browser env) before instanceof check
+        if (typeof Element !== 'undefined' && obj instanceof Element) {
             return obj.outerHTML.split('>')[0] + '...>';
         }
 
@@ -141,7 +142,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
 
     } else if (l === 'python' || l === 'py') {
        // Use Skulpt
-       if (!(window as any).Sk) {
+       // Check if window is defined (browser env)
+       if (typeof window === 'undefined' || !(window as any).Sk) {
            setExecutionResult({ type: 'console', content: 'Python execution environment (Skulpt) not loaded. Please refresh or check internet connection.', error: true });
            return;
        }
