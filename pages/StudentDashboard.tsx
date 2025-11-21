@@ -58,10 +58,21 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
         const errorMessageText = error?.message || "Unknown error";
         console.error("Gemini/Chat Error:", errorMessageText);
         
+        let friendlyError = "I encountered an error trying to solve that. Please try again.";
+        
+        // Provide more specific feedback for common deployment issues
+        if (errorMessageText.includes("API Key")) {
+            friendlyError = "System Error: API Key is missing or invalid. Please check your application settings.";
+        } else if (errorMessageText.includes("fetch failed") || errorMessageText.includes("Network")) {
+            friendlyError = "Network Error: Could not connect to the AI service. Please check your internet connection.";
+        } else if (errorMessageText.includes("403") || errorMessageText.includes("permission")) {
+            friendlyError = "Access Error: The AI service permission was denied (403). Check your API key quotas.";
+        }
+
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'model',
-        content: "I encountered an error trying to solve that. Please try again.",
+        content: friendlyError,
         timestamp: Date.now()
       };
       setMessages(prev => [...prev, errorMessage]);

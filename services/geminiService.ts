@@ -1,33 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 import { ProgrammingLanguage } from '../types';
 
-// Safely retrieve API key to prevent runtime crash on platforms where process is undefined
-const getApiKey = () => {
-  try {
-    // @ts-ignore
-    if (typeof process !== 'undefined' && process.env) {
-      // @ts-ignore
-      return process.env.API_KEY;
-    }
-  } catch (e) {
-    // Ignore error
-  }
-  return undefined;
-};
-
-const apiKey = getApiKey();
-
-// Initialize the client outside the function to reuse the instance
-const ai = new GoogleGenAI({ apiKey: apiKey || 'dummy-key' });
+// Initialize the Google GenAI client.
+// The API key is retrieved directly from process.env.API_KEY as required by build tools (Vite/Webpack)
+// to perform string replacement during deployment.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateCodeSolution = async (
   language: ProgrammingLanguage,
   question: string
 ): Promise<string> => {
-  if (!apiKey) {
-    throw new Error("API Key is missing. Please check your environment configuration.");
-  }
-
   try {
     const modelId = 'gemini-2.5-flash';
     
@@ -55,8 +37,7 @@ export const generateCodeSolution = async (
 
     return response.text || "No response generated.";
   } catch (error: any) {
-    // Avoid logging full error object if it contains circular references
-    console.error("Gemini API Error:", error?.message || String(error));
-    throw new Error("Failed to generate code. Please try again later.");
+    console.error("Gemini API Error:", error);
+    throw error; // Re-throw to be handled by the UI
   }
 };
