@@ -61,8 +61,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
         let friendlyError = "I encountered an error trying to solve that. Please try again.";
         
         // Provide more specific feedback for common deployment issues
-        if (errorMessageText.includes("API Key")) {
-            friendlyError = "System Error: API Key is missing or invalid. Please check your application settings.";
+        if (errorMessageText.includes("API Key") || errorMessageText.includes("API_KEY")) {
+            friendlyError = "Configuration Error: API Key is missing. Please add 'API_KEY' to your Vercel Environment Variables.";
         } else if (errorMessageText.includes("fetch failed") || errorMessageText.includes("Network")) {
             friendlyError = "Network Error: Could not connect to the AI service. Please check your internet connection.";
         } else if (errorMessageText.includes("403") || errorMessageText.includes("permission")) {
@@ -95,6 +95,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
       
       // Helper to safely stringify objects preventing circular references
       const safeStringify = (obj: any) => {
+        if (obj === null) return 'null';
+        if (obj === undefined) return 'undefined';
+        
+        // Handle globals to prevent massive dumps/freezing
+        if (typeof window !== 'undefined' && obj === window) return '[window object]';
+        if (typeof document !== 'undefined' && obj === document) return '[document object]';
+
         // Handle DOM elements specifically to avoid massive recursive structures
         // Check if Element is defined (browser env) before instanceof check
         if (typeof Element !== 'undefined' && obj instanceof Element) {
@@ -136,6 +143,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
 
       try {
         // Wrap in a function to allow return statements and isolated scope
+        // We include a try/catch inside the function to catch user code errors
         const safeFn = new Function('console', `
           try {
             ${code}
@@ -145,7 +153,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
         `);
         safeFn(mockConsole);
       } catch (e: any) {
-        logs.push("Runtime Error: " + e.message);
+        // This catches syntax errors in the user's code that prevent function creation
+        logs.push("Syntax Error: " + e.message);
       }
 
       if (logs.length === 0) logs.push("Code executed successfully (no output).");
@@ -155,7 +164,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
        // Use Skulpt
        // Check if window is defined (browser env)
        if (typeof window === 'undefined' || !(window as any).Sk) {
-           setExecutionResult({ type: 'console', content: 'Python execution environment (Skulpt) not loaded. Please refresh or check internet connection.', error: true });
+           setExecutionResult({ type: 'console', content: 'Python execution environment (Skulpt) not loaded. Please refresh the page or check your internet connection.', error: true });
            return;
        }
 

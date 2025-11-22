@@ -3,18 +3,27 @@ import { GoogleGenAI } from "@google/genai";
 import { ProgrammingLanguage } from '../types';
 
 // Initialize the Google GenAI client lazily to prevent app crashes at startup
-// if the API key is missing in the environment (common in fresh Vercel deploys).
 let ai: GoogleGenAI | null = null;
 
 const getAiClient = () => {
   if (ai) return ai;
 
-  // Attempt to get key from process.env (Node/Webpack)
-  // Note: In Vite, this requires appropriate config or replacement during build.
-  const apiKey = process.env.API_KEY;
+  // 1. Try Vite standard (Vercel default for React usually)
+  // @ts-ignore
+  let apiKey = import.meta.env?.VITE_API_KEY;
+
+  // 2. Try Create React App standard
+  if (!apiKey) {
+    apiKey = process.env.REACT_APP_API_KEY;
+  }
+
+  // 3. Try standard Node/Process env (Fallback)
+  if (!apiKey) {
+    apiKey = process.env.API_KEY;
+  }
 
   if (!apiKey) {
-    throw new Error("Configuration Error: API_KEY is missing. Please add it to your Vercel Environment Variables.");
+    throw new Error("Configuration Error: API Key is missing. Please add 'VITE_API_KEY' to your Vercel Environment Variables.");
   }
 
   ai = new GoogleGenAI({ apiKey });

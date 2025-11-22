@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, Suspense } from 'react';
 import { Navbar } from './components/Navbar';
 import { User, UserRole, SubscriptionStatus } from './types';
@@ -29,7 +28,7 @@ const App: React.FC = () => {
             
             // Fix for name display: Fallback to Auth profile if DB name is missing or empty
             // Using a robust check to ensure we always display something
-            if (!userData.name || userData.name.trim() === '') {
+            if (!userData.name || (userData.name && userData.name.trim() === '')) {
                 const currentAuthUser = auth.currentUser || firebaseUser;
                 const displayName = currentAuthUser.displayName || firebaseUser.displayName || email.split('@')[0] || 'Student';
                 userData.name = displayName;
