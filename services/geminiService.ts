@@ -1,16 +1,33 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { ProgrammingLanguage } from '../types';
 
-// Initialize the Google GenAI client.
-// The API key is retrieved directly from process.env.API_KEY as required by build tools (Vite/Webpack)
-// to perform string replacement during deployment.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize the Google GenAI client lazily to prevent app crashes at startup
+// if the API key is missing in the environment (common in fresh Vercel deploys).
+let ai: GoogleGenAI | null = null;
+
+const getAiClient = () => {
+  if (ai) return ai;
+
+  // Attempt to get key from process.env (Node/Webpack)
+  // Note: In Vite, this requires appropriate config or replacement during build.
+  const apiKey = process.env.API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Configuration Error: API_KEY is missing. Please add it to your Vercel Environment Variables.");
+  }
+
+  ai = new GoogleGenAI({ apiKey });
+  return ai;
+};
 
 export const generateCodeSolution = async (
   language: ProgrammingLanguage,
   question: string
 ): Promise<string> => {
   try {
+    // Get client here, which might throw if key is missing
+    const client = getAiClient();
     const modelId = 'gemini-2.5-flash';
     
     const systemPrompt = `
@@ -26,7 +43,7 @@ export const generateCodeSolution = async (
       Format your response using Markdown. Use \`\`\`${language.toLowerCase().replace('/', '')}\`\`\` for code blocks.
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
       model: modelId,
       contents: question,
       config: {

@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, Suspense } from 'react';
 import { Navbar } from './components/Navbar';
-import { LoginView } from './pages/Login';
-import { StudentDashboard } from './pages/StudentDashboard';
-import { AdminDashboard } from './pages/AdminDashboard';
-import { PaymentView } from './pages/Payment';
 import { User, UserRole, SubscriptionStatus } from './types';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { auth, db } from './services/firebase';
+
+// Lazy load pages to optimize bundle size and fix chunk size warnings
+const LoginView = React.lazy(() => import('./pages/Login').then(module => ({ default: module.LoginView })));
+const StudentDashboard = React.lazy(() => import('./pages/StudentDashboard').then(module => ({ default: module.StudentDashboard })));
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
+const PaymentView = React.lazy(() => import('./pages/Payment').then(module => ({ default: module.PaymentView })));
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -121,8 +124,6 @@ const App: React.FC = () => {
         const userRef = doc(db, "users", user.id);
         await updateDoc(userRef, { role: newRole });
       } catch (error) {
-        // If permission denied (e.g. Student trying to write), we just log it
-        // The local state switch still allows them to see the other view temporarily
         console.log("Switched role locally (remote update failed due to permissions)");
       }
     }
@@ -161,7 +162,13 @@ const App: React.FC = () => {
         onSwitchRole={handleSwitchRole}
       />
       <main className="flex-grow">
-        {CurrentView}
+        <Suspense fallback={
+          <div className="flex items-center justify-center h-full min-h-[300px]">
+             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-600"></div>
+          </div>
+        }>
+          {CurrentView}
+        </Suspense>
       </main>
     </div>
   );
